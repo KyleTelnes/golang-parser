@@ -4,6 +4,7 @@ import (
   "io/ioutil"
   "log"
 	"os"
+	"strings"
 )
 
 // GenerateProlog
@@ -29,20 +30,66 @@ func GenerateScheme () string {
 // nothing
 func LexicallyAnalyze (fileName string) {
 	//read file and return all of the text into 'body'
-	body, err := ioutil.ReadFile(fileName)
-	if err != nil {
-  	log.Fatalf("unable to read file: %v", err)
+	body, err0 := ioutil.ReadFile(fileName)
+	if err0 != nil {
+  	log.Fatalf("unable to read file: %v", err0)
   }
+	//create a new file to write tokens into
+	tknFileName := strings.TrimRight(fileName, ".cpl")
+	file, err1 := os.Create(tknFileName + ".tkn")
+
+    if err1 != nil {
+        log.Fatalf("unable to create/open file: %v", err1)
+    }
+
+    defer file.Close()
+
 	//iterate through each character in 'body'
 	for i := 0; i < len(string(body)); i++ {
 		//Assign tokens to the lexemes
 		switch {
-		case string(body[i]) == "=": fmt.Println("ASSIGN")
-		case string(body[i]) == ",": fmt.Println("COMMA")
-		case string(body[i]) == ";": fmt.Println("SEMICOLON")
-		case string(body[i]) == "(": fmt.Println("LPAREN")
-		case string(body[i]) == ")": fmt.Println("RPAREN")
-		case string(body[i]) == ".": fmt.Println("PERIOD")
+		case string(body[i]) == "=":
+			//write to token file
+			_, err2 := file.WriteString("ASSIGN\n")
+
+    	if err2 != nil {
+        	log.Fatalf("unable to write to file: %v", err2)
+    	}
+		case string(body[i]) == ",":
+			//write to token file
+			_, err2 := file.WriteString("COMMA\n")
+
+			if err2 != nil {
+					log.Fatalf("unable to write to file: %v", err2)
+			}
+		case string(body[i]) == ";":
+			//write to token file
+			_, err2 := file.WriteString("SEMICOLON\n")
+
+			if err2 != nil {
+					log.Fatalf("unable to write to file: %v", err2)
+			}
+		case string(body[i]) == "(":
+			//write to token file
+			_, err2 := file.WriteString("LPAREN\n")
+
+    	if err2 != nil {
+        	log.Fatalf("unable to write to file: %v", err2)
+    	}
+		case string(body[i]) == ")":
+			//write to token file
+			_, err2 := file.WriteString("RPAREN\n")
+
+			if err2 != nil {
+					log.Fatalf("unable to write to file: %v", err2)
+			}
+		case string(body[i]) == ".":
+			//write to token file
+			_, err2 := file.WriteString("PERIOD\n")
+
+			if err2 != nil {
+					log.Fatalf("unable to write to file: %v", err2)
+			}
 		//these two empty cases are there to ignore whitespace chars
 		case string(body[i]) == " ":
 		case string(body[i]) == "\n":
@@ -55,7 +102,12 @@ func LexicallyAnalyze (fileName string) {
 				len++
 			}
 			i += len
-			fmt.Println("NUM " + num)
+			//write to token file
+			_, err2 := file.WriteString("NUM " + num + "\n")
+
+    	if err2 != nil {
+        	log.Fatalf("unable to write to file: %v", err2)
+    	}
 		//assigns ID and other reserved word tokens
 	  default:
 			idName := string(body[i])
@@ -67,15 +119,40 @@ func LexicallyAnalyze (fileName string) {
 			i += idLength
 			//special cases for reserved words
 			if idName == "point" {
-				fmt.Println("POINT")
+				//write to token file
+				_, err2 := file.WriteString("POINT\n")
+
+	    	if err2 != nil {
+	        	log.Fatalf("unable to write to file: %v", err2)
+	    	}
 			} else if idName == "triangle" {
-				fmt.Println("TRIANGLE")
+				//write to token file
+				_, err2 := file.WriteString("TRIANGLE\n")
+
+	    	if err2 != nil {
+	        	log.Fatalf("unable to write to file: %v", err2)
+	    	}
 			} else if idName == "test" {
-				fmt.Println("TEST")
+				//write to token file
+				_, err2 := file.WriteString("TEST\n")
+
+	    	if err2 != nil {
+	        	log.Fatalf("unable to write to file: %v", err2)
+	    	}
 			} else if idName == "square" {
-				fmt.Println("SQUARE")
+				//write to token file
+				_, err2 := file.WriteString("SQUARE\n")
+
+	    	if err2 != nil {
+	        	log.Fatalf("unable to write to file: %v", err2)
+	    	}
 			} else { //if it is not reserved, write as identifier
-				fmt.Println("ID " + idName)
+				//write to token file
+				_, err2 := file.WriteString("ID " + idName + "\n")
+
+	    	if err2 != nil {
+	        	log.Fatalf("unable to write to file: %v", err2)
+	    	}
 			}
 		}
 	}
