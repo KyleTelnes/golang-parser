@@ -109,7 +109,7 @@ func LexicallyAnalyze (fileName string) {
         	log.Fatalf("unable to write to file: %v", err2)
     	}
 		//assigns ID and other reserved word tokens
-	  default:
+		case body[i] < 123 && body[i] > 96:
 			idName := string(body[i])
 			idLength := 0
 			for j := i + 1; body[j] < 123 && body[j] > 96; j++ {
@@ -122,38 +122,41 @@ func LexicallyAnalyze (fileName string) {
 				//write to token file
 				_, err2 := file.WriteString("POINT\n")
 
-	    	if err2 != nil {
-	        	log.Fatalf("unable to write to file: %v", err2)
-	    	}
+				if err2 != nil {
+					log.Fatalf("unable to write to file: %v", err2)
+				}
 			} else if idName == "triangle" {
 				//write to token file
 				_, err2 := file.WriteString("TRIANGLE\n")
 
-	    	if err2 != nil {
-	        	log.Fatalf("unable to write to file: %v", err2)
-	    	}
+				if err2 != nil {
+						log.Fatalf("unable to write to file: %v", err2)
+				}
 			} else if idName == "test" {
 				//write to token file
 				_, err2 := file.WriteString("TEST\n")
 
-	    	if err2 != nil {
-	        	log.Fatalf("unable to write to file: %v", err2)
-	    	}
-			} else if idName == "square" {
+				if err2 != nil {
+						log.Fatalf("unable to write to file: %v", err2)
+				}
+			}	else if idName == "square" {
 				//write to token file
 				_, err2 := file.WriteString("SQUARE\n")
 
-	    	if err2 != nil {
-	        	log.Fatalf("unable to write to file: %v", err2)
-	    	}
+				if err2 != nil {
+						log.Fatalf("unable to write to file: %v", err2)
+				}
 			} else { //if it is not reserved, write as identifier
 				//write to token file
 				_, err2 := file.WriteString("ID " + idName + "\n")
 
-	    	if err2 != nil {
-	        	log.Fatalf("unable to write to file: %v", err2)
-	    	}
+				if err2 != nil {
+						log.Fatalf("unable to write to file: %v", err2)
+				}
 			}
+		//if the character is not in the language
+	  default:
+				panic("Lexical Error, " + string(body[i]) + " not recognized")
 		}
 	}
 }
@@ -170,7 +173,10 @@ func main() {
 	fileName := os.Args[1]
 
 	//do Lexical Analysis
+	fmt.Println("Processing input file " + fileName)
 	LexicallyAnalyze(fileName)
+
+	//do Syntax Analysis
 
 	//Decides whether to generate scheme or prolog code based on command line arg
 	if os.Args[2] == "-s" {
