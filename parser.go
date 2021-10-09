@@ -9,24 +9,372 @@ import (
   "log"
 	"os"
 	"strings"
+	//"strconv"
+	"unicode"
 )
+
+// this struct will make it easier to translate between 4point and
+// Prolog / Scheme
+// represents components of POINT_DEF statment
+// has id and code of other language fields
+type AssignStatement struct {
+	_id string
+	_codeOtherLang string
+}
 
 // GenerateProlog
 // using the results of the parser, generates the corresponding code in Prolog
 // returns:
 // a string with the Prolog code
-func GenerateProlog () string {
+func GenerateProlog (fileName string) string {
 	fmt.Println("Generating Prolog Code...")
-	return "dummy text p"
+	//read file and return all of the text into 'body'
+	body, err0 := ioutil.ReadFile(fileName)
+	if err0 != nil {
+  	log.Fatalf("unable to read file: %v", err0)
+  }
+	//remove whitespace from body
+	fileContents := strings.Fields(string(body))
+
+	//process the Slice to make it easier to iterate through the statements
+	fileContents = strings.SplitAfter(strings.Join(fileContents, ""), "SEMICOLON")
+
+	//final contains the final Prolog code
+	final := ""
+
+	//processed is a string Slice containing the processed statements
+	var processed = make([]AssignStatement, 0, 100)
+
+	//using the grammar, a statement will either be a POINT_DEF or TEST
+	//POINT_DEF statments are the only ones that contain '=' (ASSIGN)
+	for i := 0; i < len(fileContents); i++ {
+		if strings.Contains(fileContents[i], "ASSIGN") {
+			//extract the information needed to create the statement in prolog
+			//only the id and nums are needed, so trim everything else out
+			fileContents[i] = Simplify(fileContents[i], "ASSIGN")
+			fileContents[i] = Simplify(fileContents[i], "POINT")
+			fileContents[i] = Simplify(fileContents[i], "LPAREN")
+			fileContents[i] = Simplify(fileContents[i], "COMMA")
+			fileContents[i] = Simplify(fileContents[i], "RPAREN")
+			fileContents[i] = Simplify(fileContents[i], "SEMICOLON")
+			fileContents[i] = Simplify(fileContents[i], "PERIOD")
+
+			//extract the id
+			id := ""
+			for j := 2; unicode.IsLower(rune(fileContents[i][j])); j++ {
+				id += string(fileContents[i][j])
+			}
+			//extract nums
+			num1 := ""
+			for j := strings.Index(fileContents[i], "NUM") + 3; unicode.IsDigit(rune(fileContents[i][j])); j++ {
+				num1 += string(fileContents[i][j])
+			}
+			num2 := ""
+			for j := strings.LastIndex(fileContents[i], "NUM") + 2; j < len(fileContents[i]); j++ {
+				if unicode.IsDigit(rune(fileContents[i][j])) {
+					num2 += string(fileContents[i][j])
+				}
+			}
+			//grow slice by 1
+			processed = processed[:len(processed) + 1]
+			//add statement info
+			processed[i]._id = id
+			processed[i]._codeOtherLang = "point2d" + "(" + num1 + ", " + num2 + ")"
+
+		} else { //case for a test statement
+			//extract the information needed to create the statement in prolog
+			//only the id and nums are needed, so trim everything else out
+			fileContents[i] = Simplify(fileContents[i], "LPAREN")
+			fileContents[i] = Simplify(fileContents[i], "COMMA")
+			fileContents[i] = Simplify(fileContents[i], "COMMA")
+			fileContents[i] = Simplify(fileContents[i], "COMMA")
+			fileContents[i] = Simplify(fileContents[i], "COMMA")
+			fileContents[i] = Simplify(fileContents[i], "RPAREN")
+			fileContents[i] = Simplify(fileContents[i], "SEMICOLON")
+			fileContents[i] = Simplify(fileContents[i], "PERIOD")
+
+
+			if strings.Contains(fileContents[i], "TRIANGLE") {
+				//match the three parameters to the point ids
+				id1 := ""
+				id2 := ""
+				id3 := ""
+				bookmark := 0
+				statement := ""
+				//first ID will always be at index 14
+				for j := 14; unicode.IsLower(rune(fileContents[i][j])); j++ {
+					if unicode.IsLower(rune(fileContents[i][j])) {
+						id1 += string(fileContents[i][j])
+						bookmark = j
+					}
+				}
+				for j := bookmark + 3; unicode.IsLower(rune(fileContents[i][j])); j++ {
+					if unicode.IsLower(rune(fileContents[i][j])) {
+						id2 += string(fileContents[i][j])
+						bookmark = j
+					}
+				}
+				for j := bookmark + 3; j < len(fileContents[i]); j++ {
+					if unicode.IsLower(rune(fileContents[i][j])) {
+						id3 += string(fileContents[i][j])
+						bookmark = j
+					}
+				}
+				for j := 0; j < len(processed); j++ {
+					if processed[j]._id == id1 {
+						statement += "(" + processed[j]._codeOtherLang + ", "
+					} else if processed[j]._id == id2 {
+						statement += processed[j]._codeOtherLang + ", "
+					} else if processed[j]._id == id3 {
+						statement += processed[j]._codeOtherLang + ")"
+					}
+				}
+				//print all of the statements onto the screen
+				fmt.Println("\nProcessing triangle test:\n")
+				fmt.Println("query(line" + statement + ").")
+				fmt.Println("query(triangle" + statement + ").")
+				fmt.Println("query(vertical" + statement + ").")
+				fmt.Println("query(horizontal" + statement + ").")
+				fmt.Println("query(equilateral" + statement + ").")
+				fmt.Println("query(isosceles" + statement + ").")
+				fmt.Println("query(right" + statement + ").")
+				fmt.Println("query(scalene" + statement + ").")
+				fmt.Println("query(acute" + statement + ").")
+				fmt.Println("query(obtuse" + statement + ").")
+
+			} else { //case for square, same code as triangle but with one more id added
+				//match the four parameters to the point ids
+				id1 := ""
+				id2 := ""
+				id3 := ""
+				id4 := ""
+				bookmark := 0
+				statement := ""
+				//first ID will always be at index 12
+				for j := 12; unicode.IsLower(rune(fileContents[i][j])); j++ {
+					if unicode.IsLower(rune(fileContents[i][j])) {
+						id1 += string(fileContents[i][j])
+						bookmark = j
+					}
+				}
+				for j := bookmark + 3; unicode.IsLower(rune(fileContents[i][j])); j++ {
+					if unicode.IsLower(rune(fileContents[i][j])) {
+						id2 += string(fileContents[i][j])
+						bookmark = j
+					}
+				}
+				for j := bookmark + 3; unicode.IsLower(rune(fileContents[i][j])); j++ {
+					if unicode.IsLower(rune(fileContents[i][j])) {
+						id3 += string(fileContents[i][j])
+						bookmark = j
+					}
+				}
+				for j := bookmark + 3; j < len(fileContents[i]); j++ {
+					if unicode.IsLower(rune(fileContents[i][j])) {
+						id4 += string(fileContents[i][j])
+						bookmark = j
+					}
+				}
+				for j := 0; j < len(processed); j++ {
+					if processed[j]._id == id1 {
+						statement += "(" + processed[j]._codeOtherLang + ", "
+					} else if processed[j]._id == id2 {
+						statement += processed[j]._codeOtherLang + ", "
+					} else if processed[j]._id == id3 {
+						statement += processed[j]._codeOtherLang + ", "
+					} else if processed[j]._id == id4 {
+						statement += processed[j]._codeOtherLang + ")"
+					}
+				}
+				//print all of the statements onto the screen
+				fmt.Println("\nProcessing square test:\n")
+				fmt.Println("query(square" + statement + ").")
+			}
+		}
+	}
+	final += "\nQuery processing:\n"
+	//this statement will always be at the end of the prolog program as far as I know
+	final += "\nwriteln(T) :- write(T), nl.\nmain:- forall(query(Q), Q-> (writeln(‘yes’)) ; (writeln(‘no’))),\n\thalt."
+	return final
 }
 
 // GenerateScheme
 // using the results of the parser, generates the corresponding code in Scheme
+// used same code as GenerateProlog function, with minor changes
 // returns:
 // a string with the Scheme code
-func GenerateScheme () string {
+func GenerateScheme (fileName string) string {
 	fmt.Println("Generating Scheme Code...")
-	return "dummy text s"
+	//read file and return all of the text into 'body'
+	body, err0 := ioutil.ReadFile(fileName)
+	if err0 != nil {
+  	log.Fatalf("unable to read file: %v", err0)
+  }
+
+	fileContents := strings.Fields(string(body))
+
+	//process the Slice to make it easier to seperate the statments
+	fileContents = strings.SplitAfter(strings.Join(fileContents, ""), "SEMICOLON")
+
+	//processed is a string Slice containing the processed statements
+	var processed = make([]AssignStatement, 0, 100)
+
+	//using the grammar, a statement will either be a POINT_DEF or TEST
+	//POINT_DEF statments are the only ones that contain '=' (ASSIGN)
+	for i := 0; i < len(fileContents); i++ {
+		if strings.Contains(fileContents[i], "ASSIGN") {
+			//extract the information needed to create the statement in prolog
+			//only the id and nums are needed, so trim everything else out
+			fileContents[i] = Simplify(fileContents[i], "ASSIGN")
+			fileContents[i] = Simplify(fileContents[i], "POINT")
+			fileContents[i] = Simplify(fileContents[i], "LPAREN")
+			fileContents[i] = Simplify(fileContents[i], "COMMA")
+			fileContents[i] = Simplify(fileContents[i], "RPAREN")
+			fileContents[i] = Simplify(fileContents[i], "SEMICOLON")
+			fileContents[i] = Simplify(fileContents[i], "PERIOD")
+
+			//extract the id
+			id := ""
+			for j := 2; unicode.IsLower(rune(fileContents[i][j])); j++ {
+				id += string(fileContents[i][j])
+			}
+			//extract nums
+			num1 := ""
+			for j := strings.Index(fileContents[i], "NUM") + 3; unicode.IsDigit(rune(fileContents[i][j])); j++ {
+				num1 += string(fileContents[i][j])
+			}
+			num2 := ""
+			for j := strings.LastIndex(fileContents[i], "NUM") + 2; j < len(fileContents[i]); j++ {
+				if unicode.IsDigit(rune(fileContents[i][j])) {
+					num2 += string(fileContents[i][j])
+				}
+			}
+			//grow slice by 1
+			processed = processed[:len(processed) + 1]
+			//add statement info
+			processed[i]._id = id
+			processed[i]._codeOtherLang = "(" + "make-point" + " " + num1 + " " + num2 + ")"
+
+		} else { //case for a test statement
+			//extract the information needed to create the statement in prolog
+			//only the id and nums are needed, so trim everything else out
+			fileContents[i] = Simplify(fileContents[i], "LPAREN")
+			fileContents[i] = Simplify(fileContents[i], "COMMA")
+			fileContents[i] = Simplify(fileContents[i], "COMMA")
+			fileContents[i] = Simplify(fileContents[i], "COMMA")
+			fileContents[i] = Simplify(fileContents[i], "COMMA")
+			fileContents[i] = Simplify(fileContents[i], "RPAREN")
+			fileContents[i] = Simplify(fileContents[i], "SEMICOLON")
+			fileContents[i] = Simplify(fileContents[i], "PERIOD")
+
+
+			if strings.Contains(fileContents[i], "TRIANGLE") {
+				//match the three parameters to the point ids
+				id1 := ""
+				id2 := ""
+				id3 := ""
+				bookmark := 0
+				statement := ""
+				//first ID will always be at index 14
+				for j := 14; unicode.IsLower(rune(fileContents[i][j])); j++ {
+					if unicode.IsLower(rune(fileContents[i][j])) {
+						id1 += string(fileContents[i][j])
+						bookmark = j
+					}
+				}
+				for j := bookmark + 3; unicode.IsLower(rune(fileContents[i][j])); j++ {
+					if unicode.IsLower(rune(fileContents[i][j])) {
+						id2 += string(fileContents[i][j])
+						bookmark = j
+					}
+				}
+				for j := bookmark + 3; j < len(fileContents[i]); j++ {
+					if unicode.IsLower(rune(fileContents[i][j])) {
+						id3 += string(fileContents[i][j])
+						bookmark = j
+					}
+				}
+				for j := 0; j < len(processed); j++ {
+					if processed[j]._id == id1 {
+						statement += processed[j]._codeOtherLang + " "
+					} else if processed[j]._id == id2 {
+						statement += processed[j]._codeOtherLang + " "
+					} else if processed[j]._id == id3 {
+						statement += processed[j]._codeOtherLang
+					}
+				}
+				//print all of the statements onto the screen
+				fmt.Println("(process-triangle " + statement + ")")
+			} else { //case for square, same code as triangle but with one more id added
+				//match the four parameters to the point ids
+				id1 := ""
+				id2 := ""
+				id3 := ""
+				id4 := ""
+				bookmark := 0
+				statement := ""
+				//first ID will always be at index 12
+				for j := 12; unicode.IsLower(rune(fileContents[i][j])); j++ {
+					if unicode.IsLower(rune(fileContents[i][j])) {
+						id1 += string(fileContents[i][j])
+						bookmark = j
+					}
+				}
+				for j := bookmark + 3; unicode.IsLower(rune(fileContents[i][j])); j++ {
+					if unicode.IsLower(rune(fileContents[i][j])) {
+						id2 += string(fileContents[i][j])
+						bookmark = j
+					}
+				}
+				for j := bookmark + 3; unicode.IsLower(rune(fileContents[i][j])); j++ {
+					if unicode.IsLower(rune(fileContents[i][j])) {
+						id3 += string(fileContents[i][j])
+						bookmark = j
+					}
+				}
+				for j := bookmark + 3; j < len(fileContents[i]); j++ {
+					if unicode.IsLower(rune(fileContents[i][j])) {
+						id4 += string(fileContents[i][j])
+						bookmark = j
+					}
+				}
+				for j := 0; j < len(processed); j++ {
+					if processed[j]._id == id1 {
+						statement += processed[j]._codeOtherLang + " "
+					} else if processed[j]._id == id2 {
+						statement += processed[j]._codeOtherLang + " "
+					} else if processed[j]._id == id3 {
+						statement += processed[j]._codeOtherLang + " "
+					} else if processed[j]._id == id4 {
+						statement += processed[j]._codeOtherLang
+					}
+				}
+				//print all of the statements onto the screen
+				fmt.Println("(process-square " + statement + ")")
+			}
+		}
+	}
+
+	//final contains the final Prolog code
+	final := ""
+
+	return final
+}
+
+// Simplify
+// a function that takes in a string and a substring to
+// get rid of the substring within the string
+// returns a string with the substring removed
+func Simplify(string1 string, substr string) string {
+	if !strings.Contains(string1, substr) {
+		return string1
+	} else {
+		i := strings.Index(string1, substr)
+		firstPart := string1[:i]
+		string1 = strings.Replace(string1[i:], substr, "", len(substr))
+		return firstPart + string1
+	}
+
 }
 
 // LexicallyAnalyze
@@ -346,9 +694,9 @@ func main() {
 
 	//Decides whether to generate scheme or prolog code based on command line arg
 	if os.Args[2] == "-s" {
-		fmt.Println(GenerateScheme())
+		fmt.Println(GenerateScheme(tknFileName + ".tkn"))
 	} else if os.Args[2] == "-p" {
-		fmt.Println(GenerateProlog())
+		fmt.Println(GenerateProlog(tknFileName + ".tkn"))
 	} else {
 		panic("Include either \"-s\" or \"-p\" in the third command line argument")
 	}
