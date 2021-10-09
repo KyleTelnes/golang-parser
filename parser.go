@@ -1,3 +1,7 @@
+//Kyle Telnes
+//CSC 3310 CPL taught by Dr. Arias
+//10-04-2021
+
 package main
 import (
   "fmt"
@@ -166,6 +170,7 @@ func LexicallyAnalyze (fileName string) {
 
 // Syntactically Analyze
 // analyzes the syntax of the program using tokens from tknFileName.tkn
+// the idea is to use recursive descent parsing
 // returns:
 // nothing
 func SyntacticallyAnalyze (fileName string) {
@@ -306,10 +311,10 @@ func ParsePOINT_LIST(fileContents []string, i *int) bool {
 	if fileContents[*i][:2] == "ID" && fileContents[*i + 1] == "COMMA" {
 		//advance the iterator twice because two tokens are analyzed
 		*i += 2
-		//call point list recursively to get the rest of the ID COMMA combos
+		//call point list recursively to analyze the rest of the ID COMMA combos
 		return ParsePOINT_LIST(fileContents, i)
 	}
-	if fileContents[*i][:2] == "ID" { //last ID in the chain of ID COMMAs
+	if fileContents[*i][:2] == "ID" { //ID should be last in the chain of ID COMMAs
 		*i++
 		return true
 	} else {
