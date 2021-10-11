@@ -9,7 +9,6 @@ import (
   "log"
 	"os"
 	"strings"
-	//"strconv"
 	"unicode"
 )
 
@@ -554,9 +553,10 @@ func ParseSTART (fileContents []string, i *int) bool {
 // returns whether the Syntax is correct so far
 // true if it is, false if not
 func ParseSTMT_LIST(fileContents []string, i *int) bool {
+	//the last index of fileContents is technically len(fileContents) - 2 because there is a whitespace char at the end
 	if ParseSTMT(fileContents, i) && fileContents[*i] == "PERIOD" &&  *i == len(fileContents) - 2 {
 		return true
-	} else if fileContents[*i] == "PERIOD" &&  *i != len(fileContents) - 2 { //if there is more after a period, something is wrong
+	} else if fileContents[*i] == "PERIOD" &&  *i != len(fileContents) - 2 { //if there is more after a period, bad syntax
 		panic("syntax error: '.' found ';' expected")
 		return false
 	} else if fileContents[*i] == "SEMICOLON" { //alternate case for if there is more to the program
