@@ -26,7 +26,7 @@ type AssignStatement struct {
 // returns:
 // a string with the Prolog code
 func GenerateProlog (fileName string) string {
-	fmt.Println("Generating Prolog Code...")
+	fmt.Println("Generating Prolog Code")
 	//read file and return all of the text into 'body'
 	body, err0 := ioutil.ReadFile(fileName)
 	if err0 != nil {
@@ -191,7 +191,7 @@ func GenerateProlog (fileName string) string {
 			}
 		}
 	}
-	final += "\nQuery processing:\n"
+	final += "\n/*Query processing*/\n"
 	//this statement will always be at the end of the prolog program as far as I know
 	final += "\nwriteln(T) :- write(T), nl.\nmain:- forall(query(Q), Q-> (writeln(‘yes’)) ; (writeln(‘no’))),\n\thalt."
 	return final
