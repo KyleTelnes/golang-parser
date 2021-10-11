@@ -557,15 +557,20 @@ func ParseSTMT_LIST(fileContents []string, i *int) bool {
 	if ParseSTMT(fileContents, i) && fileContents[*i] == "PERIOD" &&  *i == len(fileContents) - 2 {
 		return true
 	} else if fileContents[*i] == "PERIOD" &&  *i != len(fileContents) - 2 { //if there is more after a period, something is wrong
-		panic("syntax error: semicolon expected")
+		panic("syntax error: '.' found ';' expected")
 		return false
 	} else if fileContents[*i] == "SEMICOLON" { //alternate case for if there is more to the program
 		//token has been used up, so add 1 to the iterator
 		*i++
 		//recursively call the rule again if there are more statements to be expected
 		return ParseSTMT_LIST(fileContents, i)
-	} else { //if the statements don't end with ';' or '.' , bad syntax
-		panic("syntax error: semicolon or period expected")
+	} else if fileContents[*i] != "SEMICOLON" && *i < len(fileContents) - 2 { //if the statements doesn't end with ';' , bad syntax
+		panic("syntax error: ';' expected")
+		return false
+	} else if fileContents[*i] != "PERIOD" && *i != len(fileContents) - 2 { //if the program doesn't end with '.' , bad syntax
+		panic("syntax error: '.' expected")
+		return false
+	} else {
 		return false
 	}
 }
