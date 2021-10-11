@@ -130,7 +130,7 @@ func GenerateProlog (fileName string) string {
 					}
 				}
 				//print all of the statements onto the screen
-				fmt.Println("\nProcessing triangle test:\n")
+				fmt.Println("\n/*Processing triangle test*/\n")
 				fmt.Println("query(line" + statement + ").")
 				fmt.Println("query(triangle" + statement + ").")
 				fmt.Println("query(vertical" + statement + ").")
@@ -187,7 +187,7 @@ func GenerateProlog (fileName string) string {
 					}
 				}
 				//print all of the statements onto the screen
-				fmt.Println("\nProcessing square test:\n")
+				fmt.Println("\n/*Processing square test*/\n")
 				fmt.Println("query(square" + statement + ").")
 			}
 		}
@@ -203,8 +203,8 @@ func GenerateProlog (fileName string) string {
 // used same code as GenerateProlog function, with minor changes
 // returns:
 // a string with the Scheme code
-func GenerateScheme (fileName string) string {
-	fmt.Println("Generating Scheme Code...")
+func GenerateScheme (fileName string) {
+	fmt.Println("Generating Scheme Code")
 	//read file and return all of the text into 'body'
 	body, err0 := ioutil.ReadFile(fileName)
 	if err0 != nil {
@@ -354,11 +354,6 @@ func GenerateScheme (fileName string) string {
 			}
 		}
 	}
-
-	//final contains the final Prolog code
-	final := ""
-
-	return final
 }
 
 // Simplify
@@ -559,8 +554,11 @@ func ParseSTART (fileContents []string, i *int) bool {
 // returns whether the Syntax is correct so far
 // true if it is, false if not
 func ParseSTMT_LIST(fileContents []string, i *int) bool {
-	if ParseSTMT(fileContents, i) && fileContents[*i] == "PERIOD" {
+	if ParseSTMT(fileContents, i) && fileContents[*i] == "PERIOD" &&  *i == len(fileContents) - 2 {
 		return true
+	} else if fileContents[*i] == "PERIOD" &&  *i != len(fileContents) - 2 { //if there is more after a period, something is wrong
+		panic("syntax error: semicolon expected")
+		return false
 	} else if fileContents[*i] == "SEMICOLON" { //alternate case for if there is more to the program
 		//token has been used up, so add 1 to the iterator
 		*i++
@@ -602,8 +600,32 @@ func ParsePOINT_DEF(fileContents []string, i *int) bool {
 		return true
 	} else if fileContents[*i] == "TEST" { //this case is here so that an error isn't thrown if test is supposed to be analyzed instead
 		return false
+	} else if fileContents[*i][:2] != "ID" { //all cases that are wrong syntax
+		panic("syntax error: " + fileContents[*i] + " found identifier expected")
+		return false
+	} else if fileContents[*i + 1] != "ASSIGN" {
+		panic("syntax error: " + fileContents[*i + 1] + " found '=' expected")
+		return false
+	} else if fileContents[*i + 2] != "POINT" {
+		panic("syntax error: " + fileContents[*i + 2] + " found 'point' expected")
+		return false
+	} else if fileContents[*i + 3] != "LPAREN" {
+		panic("syntax error: " + fileContents[*i + 3] + " found '(' expected")
+		return false
+	} else if fileContents[*i + 4][:3] != "NUM" {
+		panic("syntax error: " + fileContents[*i + 4] + " found number expected")
+		return false
+	} else if fileContents[*i + 5] != "COMMA" {
+		panic("syntax error: " + fileContents[*i + 5] + " found ',' expected")
+		return false
+	} else if fileContents[*i + 7] != "RPAREN" { //all cases that are wrong syntax
+		panic("syntax error: " + fileContents[*i + 7] + " found ')' expected")
+		return false
+	} else if fileContents[*i + 6][:3] != "NUM" {
+		panic("syntax error: " + fileContents[*i + 6] + " found number expected")
+		return false
 	} else {
-		panic("syntax error: incorrect point declaration")
+		panic("syntax error: point statement incorrect")
 		return false
 	}
 }
@@ -617,6 +639,7 @@ func ParseTEST(fileContents []string, i *int) bool {
 	if fileContents[*i] == "TEST" && fileContents[*i + 1] == "LPAREN" {
 		//two tokens are analyzed, so advance the iterator twice
 		*i += 2
+
 		if ParseOPTION(fileContents, i) {
 			if fileContents[*i] == "COMMA" {
 				//only one token is analyzed, so advance the iterator once
@@ -645,7 +668,7 @@ func ParseOPTION(fileContents []string, i *int) bool {
 		*i++
 		return true
 	} else {
-		panic("syntax error: incorrect option")
+		panic("syntax error: " + fileContents[*i] + " found, triangle or square expected")
 		return false
 	}
 }
@@ -694,7 +717,7 @@ func main() {
 
 	//Decides whether to generate scheme or prolog code based on command line arg
 	if os.Args[2] == "-s" {
-		fmt.Println(GenerateScheme(tknFileName + ".tkn"))
+		GenerateScheme(tknFileName + ".tkn")
 	} else if os.Args[2] == "-p" {
 		fmt.Println(GenerateProlog(tknFileName + ".tkn"))
 	} else {
