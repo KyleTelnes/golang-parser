@@ -35,6 +35,11 @@ func GenerateProlog (fileName string) string {
 	//remove whitespace from body
 	fileContents := strings.Fields(string(body))
 
+  //check if there is a test specified, if not, no code can be generated
+  if !strings.Contains(string(body), "TEST") {
+    panic("error: no test specified, no Prolog code can be generated")
+  }
+
 	//process the Slice to make it easier to iterate through the statements
 	fileContents = strings.SplitAfter(strings.Join(fileContents, ""), "SEMICOLON")
 
@@ -119,15 +124,25 @@ func GenerateProlog (fileName string) string {
 						bookmark = j
 					}
 				}
+
+        //numParameters keeps track of the number of parameters
+      	numParameters := 0
 				for j := 0; j < len(processed); j++ {
 					if processed[j]._id == id1 {
 						statement += "(" + processed[j]._codeOtherLang + ", "
+            numParameters++
 					} else if processed[j]._id == id2 {
 						statement += processed[j]._codeOtherLang + ", "
+            numParameters++
 					} else if processed[j]._id == id3 {
 						statement += processed[j]._codeOtherLang + ")"
+            numParameters++
 					}
 				}
+        //check the number of parameters
+        if numParameters != 3 {
+          panic("error: incorrect number of parameters")
+        }
 				//print all of the statements onto the screen
 				fmt.Println("\n/*Processing triangle test*/\n")
 				fmt.Println("query(line" + statement + ").")
@@ -174,17 +189,28 @@ func GenerateProlog (fileName string) string {
 						bookmark = j
 					}
 				}
+
+        //numParameters keeps track of the number of parameters
+      	numParameters := 0
 				for j := 0; j < len(processed); j++ {
 					if processed[j]._id == id1 {
 						statement += "(" + processed[j]._codeOtherLang + ", "
+            numParameters++
 					} else if processed[j]._id == id2 {
 						statement += processed[j]._codeOtherLang + ", "
+            numParameters++
 					} else if processed[j]._id == id3 {
 						statement += processed[j]._codeOtherLang + ", "
+            numParameters++
 					} else if processed[j]._id == id4 {
 						statement += processed[j]._codeOtherLang + ")"
+            numParameters++
 					}
 				}
+        //check the number of parameters
+        if numParameters != 4 {
+          panic("error: incorrect number of parameters")
+        }
 				//print all of the statements onto the screen
 				fmt.Println("\n/*Processing square test*/\n")
 				fmt.Println("query(square" + statement + ").")
@@ -211,6 +237,11 @@ func GenerateScheme (fileName string) {
   }
 
 	fileContents := strings.Fields(string(body))
+
+  //check if there is a test specified, if not, no code can be generated
+  if !strings.Contains(string(body), "TEST") {
+    panic("error: no test specified, no Scheme code can be generated")
+  }
 
 	//process the Slice to make it easier to seperate the statments
 	fileContents = strings.SplitAfter(strings.Join(fileContents, ""), "SEMICOLON")
@@ -293,15 +324,24 @@ func GenerateScheme (fileName string) {
 						bookmark = j
 					}
 				}
+        //numParameters keeps track of the number of parameters
+        numParameters := 0
 				for j := 0; j < len(processed); j++ {
 					if processed[j]._id == id1 {
 						statement += processed[j]._codeOtherLang + " "
+            numParameters++
 					} else if processed[j]._id == id2 {
 						statement += processed[j]._codeOtherLang + " "
+            numParameters++
 					} else if processed[j]._id == id3 {
 						statement += processed[j]._codeOtherLang
+            numParameters++
 					}
 				}
+        //check the number of parameters
+        if numParameters != 3 {
+          panic("error: incorrect number of parameters")
+        }
 				//print all of the statements onto the screen
 				fmt.Println("(process-triangle " + statement + ")")
 			} else { //case for square, same code as triangle but with one more id added
@@ -337,17 +377,27 @@ func GenerateScheme (fileName string) {
 						bookmark = j
 					}
 				}
+        //numParameters keeps track of the number of parameters
+        numParameters := 0
 				for j := 0; j < len(processed); j++ {
 					if processed[j]._id == id1 {
 						statement += processed[j]._codeOtherLang + " "
+            numParameters++
 					} else if processed[j]._id == id2 {
 						statement += processed[j]._codeOtherLang + " "
+            numParameters++
 					} else if processed[j]._id == id3 {
 						statement += processed[j]._codeOtherLang + " "
+            numParameters++
 					} else if processed[j]._id == id4 {
 						statement += processed[j]._codeOtherLang
+            numParameters++
 					}
 				}
+        //check the number of parameters
+        if numParameters != 4 {
+          panic("error: incorrect number of parameters")
+        }
 				//print all of the statements onto the screen
 				fmt.Println("(process-square " + statement + ")")
 			}
